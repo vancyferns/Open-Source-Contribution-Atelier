@@ -6,7 +6,7 @@ A full-stack learning and operations platform for teaching open source contribut
 
 ## Stack
 
-- Backend: Django, Django REST framework, Simple JWT, PostgreSQL
+- Backend: Django, Django REST framework, Simple JWT, PostgreSQL with Supabase-first / Neon fallback support
 - Frontend: React, TypeScript, Vite, Tailwind CSS, React Router
 - Infra: Docker, Docker Compose
 - Testing: Django test suite, Pytest, Vitest, React Testing Library
@@ -19,7 +19,8 @@ graph LR
     
     subgraph Infrastructure ["Infrastructure (Docker)"]
         frontend[💻 React Frontend] -->|API Requests| api
-        api[⚙️ Django REST API<br/>incl. Sandbox Verification] -->|Database Queries| db[(🗄️ PostgreSQL)]
+        api[⚙️ Django REST API<br/>incl. Sandbox Verification] -->|Primary DB| supabase[(🗄️ Supabase PostgreSQL)]
+        api -->|Fallback DB| neon[(🗄️ Neon PostgreSQL)]
     end
 ```
 
@@ -46,6 +47,8 @@ The platform includes:
 
 ## Quick Start
 
+Backend setup for this branch is validated on Python 3.8+. If you use a newer Python release, you can keep the same commands below.
+
 ### Docker
 
 ```bash
@@ -63,7 +66,15 @@ cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
 
-2. Configure Google OAuth client (required for Google sign in):
+2. Configure database hosting by plugging in your Supabase and Neon connection strings if you want hosted Postgres instead of the local Docker database:
+
+```bash
+# backend/.env
+SUPABASE_DATABASE_URL=postgresql://user:password@host:5432/database_name
+NEON_DATABASE_URL=postgresql://user:password@host:5432/database_name
+```
+
+3. Configure Google OAuth client (required for Google sign in):
 
 ```bash
 # frontend/.env
@@ -72,7 +83,9 @@ VITE_GOOGLE_CLIENT_ID=your-google-oauth-client-id.apps.googleusercontent.com
 
 In Google Cloud Console, add `http://localhost:5173` under **Authorized JavaScript origins**.
 
-3. Backend:
+The backend is already set up to prefer Supabase when reachable and fall back to Neon automatically, so you only need to fill in the environment variables.
+
+4. Backend:
 
 ```bash
 cd backend
@@ -84,7 +97,7 @@ python manage.py seed_lessons
 python manage.py runserver
 ```
 
-4. Frontend:
+5. Frontend:
 
 ```bash
 cd frontend
